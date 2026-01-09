@@ -1,4 +1,15 @@
-// PIN Authentication & Project Management System
+// Firebase-Integrated PIN Authentication & Project Management System
+import { firebaseConfig } from './firebase-config.js';
+
+// Import Firebase modules from the global window object set in HTML
+const { initializeApp } = window.firebaseModules;
+const { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// PIN Authentication Config
 const AUTH_CONFIG = {
     correctPIN: '1234',
     maxAttempts: 5,
@@ -7,40 +18,43 @@ const AUTH_CONFIG = {
 };
 
 const STORAGE_KEYS = {
-    projects: 'absolinProjects',
     session: 'absolinSession',
     failedAttempts: 'failedAttempts',
     lockoutTime: 'lockoutTime'
 };
 
-// Default projects (initial data)
+// Default projects (used only if Firestore is empty)
 const DEFAULT_PROJECTS = [
     {
-        id: '1',
         name: 'ERP Implementation',
         description: 'Core ERP system implementation with customized modules for your business operations',
         url: 'https://example.com/project1',
+        username: '',
+        password: '',
         icon: 'home'
     },
     {
-        id: '2',
         name: 'CRM & Sales',
         description: 'Customer relationship management and sales pipeline optimization module',
         url: 'https://example.com/project2',
+        username: '',
+        password: '',
         icon: 'users'
     },
     {
-        id: '3',
         name: 'Inventory Management',
         description: 'Warehouse management, stock control, and supply chain optimization platform',
         url: 'https://example.com/project3',
+        username: '',
+        password: '',
         icon: 'layers'
     },
     {
-        id: '4',
         name: 'Custom Modules',
         description: 'Tailored business solutions and custom-developed modules for specific needs',
         url: 'https://example.com/project4',
+        username: '',
+        password: '',
         icon: 'grid'
     }
 ];
@@ -53,44 +67,66 @@ const ICONS = {
     grid: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 
-// Project Management Functions
-function initProjects() {
-    const stored = localStorage.getItem(STORAGE_KEYS.projects);
-    if (!stored) {
-        localStorage.setItem(STORAGE_KEYS.projects, JSON.stringify(DEFAULT_PROJECTS));
-        return DEFAULT_PROJECTS;
+// ===== FIREBASE PROJECT MANAGEMENT =====
+
+// Initialize Firestore with default projects if empty
+async function initProjects() {
+    try {
+        const projectsSnapshot = await getDocs(collection(db, 'projects'));
+
+        // If no projects exist, add default ones
+        if (projectsSnapshot.empty) {
+            console.log('Initializing default projects...');
+            for (const project of DEFAULT_PROJECTS) {
+                await addDoc(collection(db, 'projects'), project);
+            }
+        }
+    } catch (error) {
+        console.error('Error initializing projects:', error);
     }
-    return JSON.parse(stored);
 }
 
-function getProjects() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.projects) || '[]');
+// Get all projects from Firestore
+async function getProjects() {
+    try {
+        const querySnapshot = await getDocs(collection(db, 'projects'));
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Error getting projects:', error);
+        return [];
+    }
 }
 
-function saveProjects(projects) {
-    localStorage.setItem(STORAGE_KEYS.projects, JSON.stringify(projects));
+// Add new project to Firestore
+async function addProject(name, description, url, username, password) {
+    try {
+        const newProject = {
+            name,
+            description,
+            url,
+            username: username || '',
+            password: password || '',
+            icon: 'grid',
+            createdAt: new Date().toISOString()
+        };
+
+        await addDoc(collection(db, 'projects'), newProject);
+        console.log('Project added successfully!');
+    } catch (error) {
+        console.error('Error adding project:', error);
+        alert('Error adding project. Please try again.');
+    }
 }
 
-function addProject(name, description, url, username, password) {
-    const projects = getProjects();
-    const newProject = {
-        id: Date.now().toString(),
-        name,
-        description,
-        url,
-        username: username || '',
-        password: password || '',
-        icon: 'grid' // default icon
-    };
-    projects.push(newProject);
-    saveProjects(projects);
-    renderProjects();
-}
-
+// Delete project variable
 let projectToDelete = null;
 
+// Show delete confirmation modal
 function deleteProject(id) {
-    const projects = getProjects();
+    const projects = window.currentProjects || [];
     const project = projects.find(p => p.id === id);
 
     if (project) {
@@ -100,24 +136,34 @@ function deleteProject(id) {
     }
 }
 
-function confirmDelete() {
+// Confirm deletion
+async function confirmDelete() {
     if (projectToDelete) {
-        const projects = getProjects().filter(p => p.id !== projectToDelete);
-        saveProjects(projects);
-        renderProjects();
-        projectToDelete = null;
-        closeDeleteModal();
+        try {
+            await deleteDoc(doc(db, 'projects', projectToDelete));
+            console.log('Project deleted successfully!');
+            projectToDelete = null;
+            closeDeleteModal();
+        } catch (error) {
+            console.error('Error deleting project:', error);
+            alert('Error deleting project. Please try again.');
+        }
     }
 }
 
+// Close delete modal
 function closeDeleteModal() {
     document.getElementById('deleteConfirmModal').classList.remove('active');
     projectToDelete = null;
 }
 
-function renderProjects() {
-    const projects = getProjects();
+// Render projects to UI
+async function renderProjects() {
+    const projects = await getProjects();
+    window.currentProjects = projects; // Store for delete function
     const container = document.querySelector('.projects-grid');
+
+    if (!container) return;
 
     container.innerHTML = projects.map(project => {
         const hasCredentials = project.username || project.password;
@@ -188,15 +234,24 @@ function renderProjects() {
     }).join('');
 }
 
+// Setup real-time listener for projects
+function setupRealtimeListener() {
+    onSnapshot(collection(db, 'projects'), (snapshot) => {
+        console.log('Projects updated in Firestore - rerendering...');
+        renderProjects();
+    });
+}
+
 // Utility function to escape HTML
 function escapeHTML(str) {
+    if (!str) return '';
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
 }
 
 // Toggle credentials tooltip
-function toggleCredentials(projectId, event) {
+window.toggleCredentials = function (projectId, event) {
     event.stopPropagation();
     const tooltip = document.getElementById(`tooltip-${projectId}`);
     const allTooltips = document.querySelectorAll('.credential-tooltip');
@@ -210,13 +265,12 @@ function toggleCredentials(projectId, event) {
 
     // Toggle current tooltip
     tooltip.classList.toggle('visible');
-}
+};
 
 // Copy to clipboard
-function copyToClipboard(text, event) {
+window.copyToClipboard = function (text, event) {
     event.stopPropagation();
     navigator.clipboard.writeText(text).then(() => {
-        // Show brief success feedback
         const btn = event.currentTarget;
         const originalHTML = btn.innerHTML;
         btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -224,16 +278,21 @@ function copyToClipboard(text, event) {
             btn.innerHTML = originalHTML;
         }, 1000);
     });
-}
+};
 
 // Close tooltips when clicking outside
 document.addEventListener('click', () => {
     document.querySelectorAll('.credential-tooltip').forEach(t => t.classList.remove('visible'));
 });
 
-// PIN Authentication
-let currentPIN = '';
+// Make functions globally accessible
+window.deleteProject = deleteProject;
+window.confirmDelete = confirmDelete;
+window.closeDeleteModal = closeDeleteModal;
 
+// ===== PIN AUTHENTICATION =====
+
+let currentPIN = '';
 
 const pinContainer = document.getElementById('pinContainer');
 const contentContainer = document.getElementById('contentContainer');
@@ -249,25 +308,28 @@ const cancelBtn = document.getElementById('cancelBtn');
 const addProjectForm = document.getElementById('addProjectForm');
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    initProjects();
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize Firebase projects
+    await initProjects();
+
+    // Setup real-time listener
+    setupRealtimeListener();
+
+    // Check session
     checkSession();
 
     // PIN input event listener
     if (pinInput) {
         pinInput.addEventListener('input', (e) => {
-            // Only allow numbers
             e.target.value = e.target.value.replace(/[^0-9]/g, '');
             currentPIN = e.target.value;
             updateDisplay();
 
-            // Auto-verify when 4 digits entered
             if (currentPIN.length === 4) {
                 setTimeout(verifyPIN, 300);
             }
         });
 
-        // Prevent paste of non-numeric
         pinInput.addEventListener('paste', (e) => {
             e.preventDefault();
             const pastedText = (e.clipboardData || window.clipboardData).getData('text');
@@ -281,38 +343,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    logoutBtn.addEventListener('click', logout);
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
 
     // Project modal events
-    addProjectBtn.addEventListener('click', openModal);
-    cancelBtn.addEventListener('click', closeModal);
-    addProjectModal.addEventListener('click', (e) => {
-        if (e.target === addProjectModal) closeModal();
-    });
+    if (addProjectBtn) {
+        addProjectBtn.addEventListener('click', openModal);
+    }
 
-    addProjectForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = document.getElementById('projectName').value;
-        const description = document.getElementById('projectDescription').value;
-        const url = document.getElementById('projectUrl').value;
-        const username = document.getElementById('projectUsername').value;
-        const password = document.getElementById('projectPassword').value;
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeModal);
+    }
 
-        addProject(name, description, url, username, password);
-        addProjectForm.reset();
-        closeModal();
-    });
+    if (addProjectModal) {
+        addProjectModal.addEventListener('click', (e) => {
+            if (e.target === addProjectModal) closeModal();
+        });
+    }
+
+    if (addProjectForm) {
+        addProjectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('projectName').value;
+            const description = document.getElementById('projectDescription').value;
+            const url = document.getElementById('projectUrl').value;
+            const username = document.getElementById('projectUsername').value;
+            const password = document.getElementById('projectPassword').value;
+
+            await addProject(name, description, url, username, password);
+            addProjectForm.reset();
+            closeModal();
+        });
+    }
 
     // Delete modal events
     const deleteConfirmModal = document.getElementById('deleteConfirmModal');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 
-    confirmDeleteBtn.addEventListener('click', confirmDelete);
-    cancelDeleteBtn.addEventListener('click', closeDeleteModal);
-    deleteConfirmModal.addEventListener('click', (e) => {
-        if (e.target === deleteConfirmModal) closeDeleteModal();
-    });
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', confirmDelete);
+    }
+
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    }
+
+    if (deleteConfirmModal) {
+        deleteConfirmModal.addEventListener('click', (e) => {
+            if (e.target === deleteConfirmModal) closeDeleteModal();
+        });
+    }
 });
 
 function openModal() {
@@ -341,17 +423,18 @@ function checkLockout() {
     if (lockoutTime && Date.now() < parseInt(lockoutTime)) {
         const remaining = Math.ceil((parseInt(lockoutTime) - Date.now()) / 1000);
         showError(`Too many attempts. Try again in ${remaining} seconds.`);
-        pinInput.disabled = true;
-        setTimeout(() => {
-            pinInput.disabled = false;
-            hideError();
-        }, remaining * 1000);
+        if (pinInput) {
+            pinInput.disabled = true;
+            setTimeout(() => {
+                pinInput.disabled = false;
+                hideError();
+            }, remaining * 1000);
+        }
         return true;
     }
     localStorage.removeItem(STORAGE_KEYS.lockoutTime);
     return false;
 }
-
 
 function updateDisplay() {
     const dots = pinDisplay.querySelectorAll('.pin-dot');
@@ -366,7 +449,6 @@ function updateDisplay() {
 
 function verifyPIN() {
     if (currentPIN === AUTH_CONFIG.correctPIN) {
-        // Success
         const sessionData = {
             expiry: Date.now() + AUTH_CONFIG.sessionDuration
         };
@@ -374,7 +456,6 @@ function verifyPIN() {
         localStorage.removeItem(STORAGE_KEYS.failedAttempts);
         showContent();
     } else {
-        // Failed
         const attempts = parseInt(localStorage.getItem(STORAGE_KEYS.failedAttempts) || '0') + 1;
         localStorage.setItem(STORAGE_KEYS.failedAttempts, attempts.toString());
 
@@ -387,17 +468,21 @@ function verifyPIN() {
         }
 
         currentPIN = '';
-        pinInput.value = '';
+        if (pinInput) {
+            pinInput.value = '';
+        }
         updateDisplay();
     }
 }
 
-function showContent() {
+async function showContent() {
     pinContainer.classList.add('hidden');
     contentContainer.classList.remove('hidden');
-    renderProjects();
+    await renderProjects();
     currentPIN = '';
-    pinInput.value = '';
+    if (pinInput) {
+        pinInput.value = '';
+    }
     updateDisplay();
     hideError();
 }
@@ -418,13 +503,14 @@ function hideError() {
     errorMessage.classList.remove('show');
 }
 
-
-// Console command to change PIN
+// Console helpers
 window.changePIN = function (newPIN) {
     if (newPIN && /^\d{4}$/.test(newPIN)) {
         console.log('⚠️ Note: PIN is hardcoded in script.js. Please update AUTH_CONFIG.correctPIN manually.');
         console.log(`Set new PIN to: ${newPIN}`);
-        return `To change PIN permanently, update script.js line 2 to: correctPIN: '${newPIN}'`;
+        return `To change PIN permanently, update script.js line 12 to: correctPIN: '${newPIN}'`;
     }
     return 'Usage: changePIN("1234") - Must be 4 digits';
 };
+
+console.log('🔥 Firebase connected! Projects are now synced across all team members in real-time!');

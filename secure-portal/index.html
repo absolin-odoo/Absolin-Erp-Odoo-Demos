@@ -287,7 +287,16 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase will be initialized in script.js
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Make Firebase available globally
+        window.firebaseModules = { initializeApp, getFirestore };
+    </script>
+    <script src="script.js" type="module"></script>
 </body>
 
 </html>
