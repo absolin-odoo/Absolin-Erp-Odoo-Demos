@@ -1,0 +1,114 @@
+╔══════════════════════════════════════════════════════════════════╗
+║       ABSOLIN X ODOO - SECURE TEAM PORTAL - QUICK START          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📍 LOCATION
+─────────────────────────────────────────────────────────────────────
+/Users/rohithnaidualla/Library/Mobile Documents/com~apple~CloudDocs/
+Absolin Odoo Projects/Absolin-Erp-Odoo-Demos/secure-portal/
+
+📋 DEFAULT LOGIN
+─────────────────────────────────────────────────────────────────────
+PIN: 1234
+⚠️  CHANGE THIS BEFORE SHARING!
+
+🎨 BRAND COLORS
+─────────────────────────────────────────────────────────────────────
+Absolin:  #0066ff (Blue) → #00ccff (Cyan)
+Odoo:     #714B67 (Purple) → #00A09D (Teal)
+
+🚀 DEPLOY TO GITHUB PAGES (3 STEPS)
+─────────────────────────────────────────────────────────────────────
+
+1️⃣  CREATE REPO
+   • Go to github.com
+   • Click + → New repository
+   • Name it (e.g., "team-portal")
+   • Make it PUBLIC
+   • Click Create
+
+2️⃣  UPLOAD FILES
+   • Click "uploading an existing file"
+   • Drag: index.html, style.css, script.js, README.md
+   • Commit changes
+
+3️⃣  ENABLE PAGES
+   • Settings → Pages
+   • Source: main branch
+   • Save
+   • Wait 2 minutes
+
+🌐 YOUR LIVE URL
+─────────────────────────────────────────────────────────────────────
+https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/
+
+Example: https://rohithnaidualla.github.io/team-portal/
+
+📤 SHARE WITH TEAM
+─────────────────────────────────────────────────────────────────────
+1. Share the URL (email, Slack, WhatsApp)
+2. Share the PIN SEPARATELY (SMS, phone call)
+3. Never send both together!
+
+🔧 QUICK CUSTOMIZATIONS
+─────────────────────────────────────────────────────────────────────
+
+Change PIN:
+• Open: script.js
+• Line 2: correctPIN: 'XXXX'
+
+Edit Content:
+• Open: index.html
+• Find: <div class="content-card main-content">
+• Update company info, services, industries
+
+Modify Colors:
+• Open: style.css  
+• Lines 3-11: Update color variables
+
+✨ FEATURES INCLUDED
+─────────────────────────────────────────────────────────────────────
+✓ Absolin + Odoo dual branding
+✓ 4-digit PIN authentication
+✓ Session management (1 hour)
+✓ 5 attempts lockout (30 seconds)
+✓ Responsive design (mobile-ready)
+✓ Glassmorphism modern UI
+✓ Animated backgrounds
+✓ Company info showcase
+✓ Industry tags
+✓ Keyboard support
+
+📚 DOCUMENTATION
+─────────────────────────────────────────────────────────────────────
+• README.md       - Complete documentation
+• SETUP_GUIDE.md  - Detailed setup instructions
+• This file       - Quick reference
+
+🔒 SECURITY REMINDER
+─────────────────────────────────────────────────────────────────────
+This is CLIENT-SIDE authentication only!
+
+✓ Good for: Team resources, internal docs, demos
+✗ Not for: Sensitive data, passwords, financial info
+
+For production security, use server-side auth + database.
+
+💡 TIPS
+─────────────────────────────────────────────────────────────────────
+• Test locally first (just open index.html)
+• Change PIN before deploying
+• Custom domain? GitHub Pages supports it!
+• Update anytime: just push changes to GitHub
+• Free SSL/HTTPS included automatically
+
+📞 SUPPORT
+─────────────────────────────────────────────────────────────────────
+Absolin:  https://www.absolinsoft.com
+Odoo:     https://www.odoo.com
+GitHub:   https://pages.github.com
+
+───────────────────────────────────────────────────────────────────── 
+Made with ❤️ for Absolin Software Solutions
+Your Partner in Digital Transformation | 280+ Clients | Odoo Partner
+─────────────────────────────────────────────────────────────────────
