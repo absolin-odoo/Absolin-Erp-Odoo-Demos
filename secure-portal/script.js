@@ -15,12 +15,14 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// PIN Authentication Config
+// PIN Authentication Config - Enhanced Security
 const AUTH_CONFIG = {
-    correctPIN: '1234',
-    maxAttempts: 5,
-    lockoutDuration: 30000, // 30 seconds
-    sessionDuration: 3600000 // 1 hour
+    // PIN is hashed with SHA-256 for security
+    // Actual PIN: 3811 (DO NOT SHARE)
+    correctPINHash: '52c5a260883bb90127eec9cdbac2f9e726dc8ad2a6543d20685eec4ebf7f76bc',
+    maxAttempts: 3, // Reduced from 5 for better security
+    lockoutDuration: 300000, // 5 minutes (increased from 30 seconds)
+    sessionDuration: 1800000 // 30 minutes (reduced from 1 hour)
 };
 
 const STORAGE_KEYS = {
@@ -458,8 +460,20 @@ function updateDisplay() {
     });
 }
 
-function verifyPIN() {
-    if (currentPIN === AUTH_CONFIG.correctPIN) {
+// SHA-256 Hash function for PIN security
+async function hashPIN(pin) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
+async function verifyPIN() {
+    const hashedInput = await hashPIN(currentPIN);
+
+    if (hashedInput === AUTH_CONFIG.correctPINHash) {
         const sessionData = {
             expiry: Date.now() + AUTH_CONFIG.sessionDuration
         };
@@ -473,7 +487,10 @@ function verifyPIN() {
         if (attempts >= AUTH_CONFIG.maxAttempts) {
             const lockoutTime = Date.now() + AUTH_CONFIG.lockoutDuration;
             localStorage.setItem(STORAGE_KEYS.lockoutTime, lockoutTime.toString());
-            showError(`Too many failed attempts. Locked for 30 seconds.`);
+            showError(`Too many failed attempts. Locked for 5 minutes.`);
+            if (pinInput) {
+                pinInput.disabled = true;
+            }
         } else {
             showError(`Incorrect PIN. ${AUTH_CONFIG.maxAttempts - attempts} attempts remaining.`);
         }
