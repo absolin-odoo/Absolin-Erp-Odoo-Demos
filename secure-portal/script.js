@@ -31,41 +31,8 @@ const STORAGE_KEYS = {
     lockoutTime: 'lockoutTime'
 };
 
-// Default projects
-const DEFAULT_PROJECTS = [
-    {
-        name: 'ERP Implementation',
-        description: 'Core ERP system implementation with customized modules for your business operations',
-        url: 'https://example.com/project1',
-        username: '',
-        password: '',
-        icon: 'home'
-    },
-    {
-        name: 'CRM & Sales',
-        description: 'Customer relationship management and sales pipeline optimization module',
-        url: 'https://example.com/project2',
-        username: '',
-        password: '',
-        icon: 'users'
-    },
-    {
-        name: 'Inventory Management',
-        description: 'Warehouse management, stock control, and supply chain optimization platform',
-        url: 'https://example.com/project3',
-        username: '',
-        password: '',
-        icon: 'layers'
-    },
-    {
-        name: 'Custom Modules',
-        description: 'Tailored business solutions and custom-developed modules for specific needs',
-        url: 'https://example.com/project4',
-        username: '',
-        password: '',
-        icon: 'grid'
-    }
-];
+// No default projects - Start with clean slate
+const DEFAULT_PROJECTS = [];
 
 // SVG Icons
 const ICONS = {
@@ -175,6 +142,36 @@ async function renderProjects() {
     const container = document.querySelector('.projects-grid');
 
     if (!container) return;
+
+    // Beautiful empty state when no projects
+    if (projects.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-illustration">
+                    <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#gradient1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="url(#gradient1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="url(#gradient1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs>
+                            <linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" style="stop-color:#0066FF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#00C9FF;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h3 class="empty-state-title">No Projects Yet</h3>
+                <p class="empty-state-description">Create your first client project to get started with organizing your Odoo implementations</p>
+                <button class="empty-state-btn" onclick="document.getElementById('addProjectBtn').click()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Add Your First Project
+                </button>
+            </div>
+        `;
+        return;
+    }
 
     container.innerHTML = projects.map(project => {
         const hasCredentials = project.username || project.password;
