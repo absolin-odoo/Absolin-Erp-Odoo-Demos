@@ -1,19 +1,13 @@
 // Firebase-Integrated PIN Authentication & Project Management System
-// Using Firebase compat SDK for GitHub Pages compatibility
+import { firebaseConfig } from './firebase-config.js';
 
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyC-3bVfdgIlEk0u1ZcrRc4m4OGcbM3A",
-    authDomain: "absolin-team-portal.firebaseapp.com",
-    projectId: "absolin-team-portal",
-    storageBucket: "absolin-team-portal.firebasestorage.app",
-    messagingSenderId: "340253146446",
-    appId: "1:340253146446:web:caa663165a27af67ca7691f"
-};
+// Import Firebase modules from the global window object set in HTML
+const { initializeApp } = window.firebaseModules;
+const { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
 
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 // PIN Authentication Config
 const AUTH_CONFIG = {
@@ -29,7 +23,7 @@ const STORAGE_KEYS = {
     lockoutTime: 'lockoutTime'
 };
 
-// Default projects
+// Default projects (used only if Firestore is empty)
 const DEFAULT_PROJECTS = [
     {
         name: 'ERP Implementation',
@@ -78,17 +72,14 @@ const ICONS = {
 // Initialize Firestore with default projects if empty
 async function initProjects() {
     try {
-        const snapshot = await db.collection('projects').get();
+        const projectsSnapshot = await getDocs(collection(db, 'projects'));
 
-        if (snapshot.empty) {
+        // If no projects exist, add default ones
+        if (projectsSnapshot.empty) {
             console.log('Initializing default projects...');
-            const batch = db.batch();
-            DEFAULT_PROJECTS.forEach(project => {
-                const docRef = db.collection('projects').doc();
-                batch.set(docRef, project);
-            });
-            await batch.commit();
-            console.log('Default projects added!');
+            for (const project of DEFAULT_PROJECTS) {
+                await addDoc(collection(db, 'projects'), project);
+            }
         }
     } catch (error) {
         console.error('Error initializing projects:', error);
@@ -98,8 +89,8 @@ async function initProjects() {
 // Get all projects from Firestore
 async function getProjects() {
     try {
-        const snapshot = await db.collection('projects').get();
-        return snapshot.docs.map(doc => ({
+        const querySnapshot = await getDocs(collection(db, 'projects'));
+        return querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
@@ -122,7 +113,7 @@ async function addProject(name, description, url, username, password) {
             createdAt: new Date().toISOString()
         };
 
-        await db.collection('projects').add(newProject);
+        await addDoc(collection(db, 'projects'), newProject);
         console.log('Project added successfully!');
     } catch (error) {
         console.error('Error adding project:', error);
@@ -149,7 +140,7 @@ function deleteProject(id) {
 async function confirmDelete() {
     if (projectToDelete) {
         try {
-            await db.collection('projects').doc(projectToDelete).delete();
+            await deleteDoc(doc(db, 'projects', projectToDelete));
             console.log('Project deleted successfully!');
             projectToDelete = null;
             closeDeleteModal();
@@ -169,7 +160,7 @@ function closeDeleteModal() {
 // Render projects to UI
 async function renderProjects() {
     const projects = await getProjects();
-    window.currentProjects = projects;
+    window.currentProjects = projects; // Store for delete function
     const container = document.querySelector('.projects-grid');
 
     if (!container) return;
@@ -234,7 +225,7 @@ async function renderProjects() {
                 <button class="delete-project-btn" onclick="deleteProject('${project.id}')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 19.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </button>
             </div>
@@ -245,8 +236,8 @@ async function renderProjects() {
 
 // Setup real-time listener for projects
 function setupRealtimeListener() {
-    db.collection('projects').onSnapshot((snapshot) => {
-        console.log('Projects updated - rerendering...');
+    onSnapshot(collection(db, 'projects'), (snapshot) => {
+        console.log('Projects updated in Firestore - rerendering...');
         renderProjects();
     });
 }
@@ -265,12 +256,14 @@ window.toggleCredentials = function (projectId, event) {
     const tooltip = document.getElementById(`tooltip-${projectId}`);
     const allTooltips = document.querySelectorAll('.credential-tooltip');
 
+    // Close all other tooltips
     allTooltips.forEach(t => {
         if (t.id !== `tooltip-${projectId}`) {
             t.classList.remove('visible');
         }
     });
 
+    // Toggle current tooltip
     tooltip.classList.toggle('visible');
 };
 
@@ -316,8 +309,6 @@ const addProjectForm = document.getElementById('addProjectForm');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🔥 Initializing Firebase...');
-
     // Initialize Firebase projects
     await initProjects();
 
@@ -404,8 +395,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.target === deleteConfirmModal) closeDeleteModal();
         });
     }
-
-    console.log('✅ Firebase initialized successfully!');
 });
 
 function openModal() {
@@ -514,4 +503,14 @@ function hideError() {
     errorMessage.classList.remove('show');
 }
 
-console.log('🔥 Firebase Team Portal loaded! PIN: 1234');
+// Console helpers
+window.changePIN = function (newPIN) {
+    if (newPIN && /^\d{4}$/.test(newPIN)) {
+        console.log('⚠️ Note: PIN is hardcoded in script.js. Please update AUTH_CONFIG.correctPIN manually.');
+        console.log(`Set new PIN to: ${newPIN}`);
+        return `To change PIN permanently, update script.js line 12 to: correctPIN: '${newPIN}'`;
+    }
+    return 'Usage: changePIN("1234") - Must be 4 digits';
+};
+
+console.log('🔥 Firebase connected! Projects are now synced across all team members in real-time!');

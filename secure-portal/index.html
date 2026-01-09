@@ -287,16 +287,12 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Firebase will be initialized in script.js
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    <!-- Firebase SDK (Compat version for GitHub Pages) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-        // Make Firebase available globally
-        window.firebaseModules = { initializeApp, getFirestore };
-    </script>
-    <script src="script.js" type="module"></script>
+    <!-- Main Script -->
+    <script src="script.js"></script>
 </body>
 
 </html>
