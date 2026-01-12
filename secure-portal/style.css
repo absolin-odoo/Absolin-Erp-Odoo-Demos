@@ -919,3 +919,146 @@ body {
 .background-animation {
     display: none;
 }
+/* ===== SIDEBAR NAVIGATION ===== */
+
+.dashboard-layout {
+    display: flex;
+    gap: var(--space-3xl);
+    margin-top: var(--space-3xl);
+}
+
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--surface-primary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    padding: var(--space-lg);
+    height: fit-content;
+    position: sticky;
+    top: calc(var(--space-3xl) + 80px);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.nav-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.nav-section-title {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: var(--space-sm) var(--space-md);
+    margin-top: var(--space-sm);
+}
+
+.nav-divider {
+    height: 1px;
+    background: var(--gray-200);
+    margin: var(--space-md) 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: none;
+    color: var(--gray-700);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-align: left;
+    width: 100%;
+}
+
+.nav-item svg {
+    flex-shrink: 0;
+    color: var(--gray-500);
+}
+
+.nav-item span:first-of-type {
+    flex: 1;
+}
+
+.nav-item .count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    padding: 2px 8px;
+    border-radius: 12px;
+    min-width: 24px;
+    text-align: center;
+}
+
+.nav-item:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+}
+
+.nav-item:hover svg {
+    color: var(--absolin-primary);
+}
+
+.nav-item.active {
+    background: var(--absolin-light);
+    color: var(--absolin-primary);
+}
+
+.nav-item.active svg {
+    color: var(--absolin-primary);
+}
+
+.nav-item.active .count {
+    background: var(--absolin-primary);
+    color: white;
+}
+
+.main-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 968px) {
+    .dashboard-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        position: relative;
+        top: 0;
+    }
+    
+    .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .nav-section {
+        flex-direction: row;
+        flex: 1;
+    }
+    
+    .nav-section-title {
+        display: none;
+    }
+    
+    .nav-divider {
+        display: none;
+    }
+}
