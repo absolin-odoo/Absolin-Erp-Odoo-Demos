@@ -286,8 +286,12 @@ body::after {
 .portal-header {
     background: var(--surface-primary);
     border-bottom: 1px solid var(--gray-200);
-    margin: calc(var(--space-2xl) * -1) calc(var(--space-2xl) * -1) var(--space-3xl);
-    padding: var(--space-xl) var(--space-2xl);
+    padding: var(--space-xl) 0;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .header-content {
