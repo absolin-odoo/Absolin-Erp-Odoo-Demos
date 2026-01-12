@@ -919,6 +919,7 @@ body {
 .background-animation {
     display: none;
 }
+
 /* ===== SIDEBAR NAVIGATION ===== */
 
 .dashboard-layout {
@@ -982,6 +983,10 @@ body {
     transition: all var(--transition-base);
     text-align: left;
     width: 100%;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    font-family: inherit;
 }
 
 .nav-item svg {
@@ -1033,31 +1038,31 @@ body {
 }
 
 /* Mobile Responsive */
-@media (max-width: 968px) {
+@media (max-width: 768px) {
     .dashboard-layout {
         flex-direction: column;
     }
-    
+
     .sidebar {
         width: 100%;
         position: relative;
         top: 0;
     }
-    
+
     .sidebar-nav {
         flex-direction: row;
         flex-wrap: wrap;
     }
-    
+
     .nav-section {
         flex-direction: row;
         flex: 1;
     }
-    
+
     .nav-section-title {
         display: none;
     }
-    
+
     .nav-divider {
         display: none;
     }
