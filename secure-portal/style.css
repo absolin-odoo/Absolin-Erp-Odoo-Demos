@@ -287,11 +287,13 @@ body::after {
     background: var(--surface-primary);
     border-bottom: 1px solid var(--gray-200);
     padding: var(--space-xl) 0;
-    width: 100%;
+    width: 100vw;
     position: sticky;
     top: 0;
     z-index: 100;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
 }
 
 .header-content {
