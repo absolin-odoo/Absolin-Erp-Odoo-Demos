@@ -89,7 +89,7 @@ body {
     font-size: var(--font-size-base);
     line-height: var(--line-height-base);
     color: var(--text-primary);
-    background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 50%, #d4dfe9 100%);
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 50%, #fff3e0 100%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
@@ -110,22 +110,22 @@ body::after {
 }
 
 body::before {
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(0, 102, 255, 0.4) 0%, transparent 70%);
-    top: -250px;
-    right: -150px;
-    animation-duration: 30s;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(33, 150, 243, 0.25) 0%, transparent 70%);
+    top: -200px;
+    right: -100px;
+    animation-duration: 25s;
 }
 
 body::after {
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(102, 126, 234, 0.3) 0%, transparent 70%);
-    bottom: -300px;
-    left: -200px;
-    animation-duration: 35s;
-    animation-delay: 5s;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(156, 39, 176, 0.2) 0%, transparent 70%);
+    bottom: -250px;
+    left: -150px;
+    animation-duration: 30s;
+    animation-delay: 3s;
 }
 
 @keyframes float-shapes {
@@ -148,9 +148,9 @@ body::after {
 /* ===== Container ===== */
 .container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
-    padding: var(--space-2xl);
+    padding: var(--space-3xl) var(--space-2xl);
 }
 
 /* ===== PIN Entry View ===== */
