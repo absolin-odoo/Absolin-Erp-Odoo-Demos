@@ -352,6 +352,23 @@
                             <input type="text" id="projectPassword" class="form-input" placeholder="Login password">
                         </div>
                     </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="projectCategory">Project Category *</label>
+                        <select id="projectCategory" class="form-input" required>
+                            <option value="">Select a category...</option>
+                            <option value="odoo">Odoo Projects</option>
+                            <option value="mobile">Custom Mobile Apps</option>
+                            <option value="web">Custom Web Apps</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="projectFocus">
+                            <span>Mark as Focus Project</span>
+                        </label>
+                    </div>
                     <div class="modal-actions">
                         <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
                         <button type="submit" class="btn-primary">Add Project</button>

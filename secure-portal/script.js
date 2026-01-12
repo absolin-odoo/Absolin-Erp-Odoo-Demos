@@ -79,7 +79,7 @@ async function getProjects() {
 }
 
 // Add new project to Firestore
-async function addProject(name, description, url, username, password) {
+async function addProject(name, description, url, username, password, category, focus) {
     try {
         const newProject = {
             name,
@@ -88,6 +88,8 @@ async function addProject(name, description, url, username, password) {
             username: username || '',
             password: password || '',
             icon: 'grid',
+            category: category || '',
+            focus: focus || false,
             createdAt: new Date().toISOString()
         };
 
@@ -381,8 +383,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const url = document.getElementById('projectUrl').value;
             const username = document.getElementById('projectUsername').value;
             const password = document.getElementById('projectPassword').value;
+            const category = document.getElementById('projectCategory').value;
+            const focus = document.getElementById('projectFocus').checked;
 
-            await addProject(name, description, url, username, password);
+            await addProject(name, description, url, username, password, category, focus);
             addProjectForm.reset();
             closeModal();
         });
