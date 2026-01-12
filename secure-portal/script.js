@@ -323,6 +323,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup real-time listener
     setupRealtimeListener();
 
+    // Initialize sidebar navigation
+    initNavigation();
+
     // Check session
     checkSession();
 
@@ -529,3 +532,175 @@ function hideError() {
 }
 
 console.log('🔥 Firebase Team Portal loaded! PIN: 1234');
+
+// ===== SIDEBAR NAVIGATION FILTERING =====
+
+let currentCategory = 'all';
+
+// Initialize navigation
+function initNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const category = item.getAttribute('data-category');
+
+            // Update active state
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+
+            // Store current category
+            currentCategory = category;
+
+            // Re-render projects with filter
+            renderProjects();
+        });
+    });
+}
+
+// Update count badges
+function updateCounts(projects) {
+    const counts = {
+        all: projects.length,
+        focus: projects.filter(p => p.focus).length,
+        odoo: projects.filter(p => p.category === 'odoo').length,
+        mobile: projects.filter(p => p.category === 'mobile').length,
+        web: projects.filter(p => p.category === 'web').length
+    };
+
+    document.getElementById('count-all').textContent = counts.all;
+    document.getElementById('count-focus').textContent = counts.focus;
+    document.getElementById('count-odoo').textContent = counts.odoo;
+    document.getElementById('count-mobile').textContent = counts.mobile;
+    document.getElementById('count-web').textContent = counts.web;
+}
+
+// Filter projects based on category
+function filterProjects(projects) {
+    if (currentCategory === 'all') {
+        return projects;
+    }
+
+    if (currentCategory === 'focus') {
+        return projects.filter(p => p.focus);
+    }
+
+    return projects.filter(p => p.category === currentCategory);
+}
+
+// Override original renderProjects to add filtering
+const originalRenderProjects = renderProjects;
+renderProjects = async function () {
+    const allProjects = await getProjects();
+    window.currentProjects = allProjects;
+
+    // Update counts
+    updateCounts(allProjects);
+
+    // Filter projects
+    const filteredProjects = filterProjects(allProjects);
+
+    const container = document.querySelector('.projects-grid');
+    if (!container) return;
+
+    // Beautiful empty state when no projects
+    if (filteredProjects.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-illustration">
+                    <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#gradient1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="url(#gradient1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="url(#gradient1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs>
+                            <linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" style="stop-color:#0066FF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#00C9FF;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h3 class="empty-state-title">No Projects in ${currentCategory === 'all' ? 'This Category' : currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)}</h3>
+                <p class="empty-state-description">Create your first ${currentCategory === 'all' ? '' : currentCategory} project to get started</p>
+                <button class="empty-state-btn" onclick="document.getElementById('addProjectBtn').click()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Add Your First Project
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    // Render filtered projects (same as original but with filteredProjects)
+    container.innerHTML = filteredProjects.map(project => {
+        const hasCredentials = project.username || project.password;
+        return `
+        <div class="project-card" data-id="${project.id}">
+            <div class="project-header">
+                <div class="project-icon">
+                    ${ICONS[project.icon] || ICONS.grid}
+                </div>
+                <h4 class="project-name">${escapeHTML(project.name)}</h4>
+                ${hasCredentials ? `
+                    <div class="project-info-icon" onclick="toggleCredentials('${project.id}', event)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="16" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="12" cy="8" r="1" fill="currentColor"/>
+                        </svg>
+                        <div class="credential-tooltip" id="tooltip-${project.id}">
+                            ${project.username ? `
+                                <div class="credential-item">
+                                    <span class="credential-label">Username</span>
+                                    <div class="credential-value">
+                                        <span>${escapeHTML(project.username)}</span>
+                                        <button class="copy-btn" onclick="copyToClipboard('${escapeHTML(project.username)}', event)" title="Copy">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+                                                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" stroke-width="2"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${project.password ? `
+                                <div class="credential-item">
+                                    <span class="credential-label">Password</span>
+                                    <div class="credential-value">
+                                        <span>${escapeHTML(project.password)}</span>
+                                        <button class="copy-btn" onclick="copyToClipboard('${escapeHTML(project.password)}', event)" title="Copy">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+                                                <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" stroke-width="2"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+            <p class="project-description">${escapeHTML(project.description)}</p>
+            <div class="project-actions">
+                <button class="project-btn" onclick="window.open('${escapeHTML(project.url)}', '_blank')">
+                    Open Project
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button class="delete-project-btn" onclick="deleteProject('${project.id}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+    }).join('');
+};
+
+console.log('🎯 Sidebar navigation initialized!');
